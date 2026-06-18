@@ -22,7 +22,7 @@ class CsvTransferReporter(TransferReporter):
         
     def write(self, transfers: list[Transfer]) -> Path:
         formatted_now = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        filename = "transfer_report" + formatted_now + ".csv"
+        filename = "transfer_report_" + formatted_now + ".csv"
         # Create the output dir if it doesn't exist yet (e.g. on a fresh clone).
         self._path.mkdir(parents=True, exist_ok=True)
         full_path = self._path / filename
