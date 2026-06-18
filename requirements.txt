@@ -1,0 +1,3 @@
+# Runtime has no third-party dependencies (stdlib only).
+# Development / test dependencies:
+pytest==8.3.4

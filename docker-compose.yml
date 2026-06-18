@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    # Mount the project so code changes are picked up without rebuilding.
+    volumes:
+      - .:/app
+    # Override at runtime, e.g.:
+    #   docker compose run --rm app pytest
+    #   docker compose run --rm app python -m banking.cli ...
+    command: pytest
