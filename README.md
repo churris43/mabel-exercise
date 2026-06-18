@@ -1,23 +1,31 @@
 # mabel
 
-## Usage:
+## Build and run the container
 
-# Build and run the container
-
+```bash
 docker compose up --build
+```
 
-# Run the test suite
+## Run the test suite
 
-docker compose run --rm app pytest — run the test suite
+```bash
+docker compose run --rm app pytest
+```
 
-# Process the transactions provided in the specs folder
+## Process the transactions provided in the specs folder
 
+```bash
 docker compose run --rm app python main.py
+```
 
-Note: The main.py will generate 2 reports in storage/reports
-account*balance*_ : Contains the new account balances after processing the mable*transactions.csv file
-transfer_report*_ : Contains the results of the transfers included in mable_transactions.csv
+_Note:_ The main.py will generate 2 reports in storage/reports
 
-# Stop the container
+account_balance\* : Contains the new account balances after processing the mable\*transactions.csv file
 
+transfer_report\* : Contains the results of the transfers included in mable_transactions.csv
+
+## Stop the container
+
+```bash
 docker compose down
+```
