@@ -20,7 +20,7 @@ docker compose run --rm app python main.py
 
 _Note:_ The main.py will generate 2 reports in storage/reports
 
-account_balance\* : Contains the new account balances after processing the mable\*transactions.csv file
+account_balance\* : Contains the new account balances after processing the mable_transactions.csv file
 
 transfer_report\* : Contains the results of the transfers included in mable_transactions.csv
 
