@@ -1,4 +1,3 @@
-from decimal import Decimal
 from domains.transfers.domain.money import Money
 from domains.transfers.domain.account_number import AccountNumber
 
