@@ -26,7 +26,7 @@ class AccountRepository(ABC):
         when there was nothing to persist."""
         ...
 
-class TransferSource(ABC):
+class TransferLoader(ABC):
     """Input gateway that loads Transfers from an external source.
 
     Despite living next to AccountRepository, this is a read-only loader/gateway,

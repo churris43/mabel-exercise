@@ -6,7 +6,7 @@ from pathlib import Path
 from domains.transfers.domain.transfer import Transfer
 from domains.transfers.domain.transfer_service import TransferService
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
-from domains.transfers.infrastructure.csv_transfer_source import CsvTransferSource
+from domains.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
 from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
 
 
@@ -36,7 +36,7 @@ class ProcessTransfers:
         output_path: str | Path = "storage/reports/",
     ):
         self._account_repo = CsvAccountRepository(account_csv_path, output_path)
-        self._transfer_repo = CsvTransferSource(transfers_csv_path)
+        self._transfer_repo = CsvTransferLoader(transfers_csv_path)
         self._reporter = CsvTransferReporter(output_path)
 
     def run(self) -> TransferResult:
