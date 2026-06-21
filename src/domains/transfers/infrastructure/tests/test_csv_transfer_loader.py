@@ -63,6 +63,18 @@ def test_loading_a_csv_with_a_rubbish_line_fails_fast(tmp_path):
         repository.load()
 
 
+def test_loading_a_csv_with_an_extra_column_fails_fast(tmp_path):
+    bad_csv = tmp_path / "transfers.csv"
+    bad_csv.write_text(
+        "1111234522226789,1212343433335665,500.00\n"
+        "3212343433335755,2222123433331212,1000.00,extra\n"  # one column too many
+    )
+    repository = CsvTransferLoader(bad_csv)
+
+    with pytest.raises(ValueError):
+        repository.load()
+
+
 def test_loading_a_csv_skips_empty_lines_in_the_middle(tmp_path):
     csv_with_gap = tmp_path / "transfers.csv"
     csv_with_gap.write_text(
