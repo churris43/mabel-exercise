@@ -1,3 +1,7 @@
+# Defer evaluation of type annotations so methods can reference Money before
+# the class is fully defined (avoids needing quoted forward references).
+from __future__ import annotations
+
 from decimal import Decimal, ROUND_HALF_UP
 
 from domains.transfers.domain.exceptions import InsufficientFundsError
@@ -6,7 +10,7 @@ from dataclasses import dataclass
 
 CENTS = Decimal("0.01")
 
-@dataclass
+@dataclass(frozen=True)
 class Money:
     """A non-negative monetary amount.
 
@@ -21,15 +25,17 @@ class Money:
         if self.amount < 0:
             raise ValueError("Negative money amounts are not acceptable")
         # Money is whole-cent only: normalise any extra precision to 2 decimals.
-        self.amount = self.amount.quantize(CENTS, rounding=ROUND_HALF_UP)
+        # Frozen dataclasses block normal assignment, so set the field via
+        # object.__setattr__.
+        object.__setattr__(self, "amount", self.amount.quantize(CENTS, rounding=ROUND_HALF_UP))
     
-    def subtract(self, other: "Money") -> "Money":
+    def subtract(self, other: Money) -> Money:
         result = self.amount - other.amount
         if result < 0:
             raise InsufficientFundsError()
         return Money(result)
 
-    def add(self, other: "Money") -> "Money":
+    def add(self, other: Money) -> Money:
         return Money(self.amount + other.amount)
     
     def __str__(self) -> str:

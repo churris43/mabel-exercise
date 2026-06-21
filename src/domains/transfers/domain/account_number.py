@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from domains.transfers.domain.exceptions import InvalidAccountNumberError
 
-@dataclass
+@dataclass(frozen=True)
 class AccountNumber:
     """Value object for a bank account number.
 
