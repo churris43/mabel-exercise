@@ -43,5 +43,10 @@ class ProcessTransfers:
         transfers = self._transfer_repo.load()
         results = TransferService(self._account_repo).process_batch(transfers)
         balances_path = self._account_repo.save()
+        # TODO: fire an event for each successful transfer here, so other bounded
+        # contexts can react. This is the correct point: AFTER save() has
+        # committed the balance changes, so we never announce a success that
+        # didn't durably persist. Publish via a domain-defined port injected
+        # into this use case.
         report_path = self._reporter.write(results)
         return TransferResult(results, balances_path, report_path)
