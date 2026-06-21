@@ -5,15 +5,17 @@ account number must be 16 digits, a balance cannot go below zero, a referenced
 account must exist — not infrastructure or framework concerns.
 """
 
-
-class InvalidAccountNumberError(Exception):
+class TransferError(Exception):
+    """Base for all transfer-domain rule violations."""
+    
+class InvalidAccountNumberError(TransferError):
     def __init__(self, message="Invalid account number"):
         super().__init__(message)
 
-class AccountNumberNotFoundError(Exception):
+class AccountNumberNotFoundError(TransferError):
     def __init__(self, message="Account number not found"):
         super().__init__(message)
 
-class InsufficientFundsError(Exception):
+class InsufficientFundsError(TransferError):
     def __init__(self, message="Insufficient Funds"):
         super().__init__(message)

@@ -2,7 +2,7 @@ import pytest
 
 from decimal import Decimal
 from domains.transfers.domain.money import Money
-from domains.transfers.infrastructure.csv_transfer_source import CsvTransferSource
+from domains.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
 from domains.transfers.domain.exceptions import InvalidAccountNumberError
 
 TRANSFERS_CSV = (
@@ -25,7 +25,7 @@ def csv_path(tmp_path):
 
 @pytest.fixture
 def transfers(csv_path):
-    return CsvTransferSource(csv_path).load()
+    return CsvTransferLoader(csv_path).load()
 
 def test_loading_csv_file_creates_one_transfer_object_per_row(transfers):
     assert len(transfers) == 4, (
@@ -45,7 +45,7 @@ def test_loading_a_csv_with_an_invalid_account_number_fails_fast(tmp_path):
         "1111234522226789,1212343433335665,500.00\n"
         "notanumber,1212343433335665,1000.00\n"  # from-account is not a valid account number
     )
-    repository = CsvTransferSource(bad_csv)
+    repository = CsvTransferLoader(bad_csv)
 
     with pytest.raises(InvalidAccountNumberError):
         repository.load()
@@ -57,7 +57,7 @@ def test_loading_a_csv_with_a_rubbish_line_fails_fast(tmp_path):
         "1111234522226789,1212343433335665,500.00\n"
         "this line is total rubbish\n"  # not three comma-separated columns
     )
-    repository = CsvTransferSource(bad_csv)
+    repository = CsvTransferLoader(bad_csv)
 
     with pytest.raises(ValueError):
         repository.load()
@@ -70,7 +70,7 @@ def test_loading_a_csv_skips_empty_lines_in_the_middle(tmp_path):
         "\n"
         "3212343433335755,2222123433331212,1000.00\n"
     )
-    repository = CsvTransferSource(csv_with_gap)
+    repository = CsvTransferLoader(csv_with_gap)
 
     transfers = repository.load()
 

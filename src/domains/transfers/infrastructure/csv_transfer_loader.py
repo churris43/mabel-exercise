@@ -5,10 +5,10 @@ from pathlib import Path
 from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.transfer import Transfer
 from domains.transfers.domain.money import Money
-from domains.transfers.domain.repositories import TransferSource
+from domains.transfers.domain.repositories import TransferLoader
 
-class CsvTransferSource(TransferSource):
-    """CSV adapter for the TransferSource input port.
+class CsvTransferLoader(TransferLoader):
+    """CSV adapter for the TransferLoader input port.
 
     Reads transfers from a CSV with columns ``from_account_number,
     to_account_number, amount`` (one transfer per row) and returns them as
