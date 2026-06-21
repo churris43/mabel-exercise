@@ -6,8 +6,9 @@ class TransferService:
 
     It coordinates two Accounts (debit the source, credit the destination) and
     records the outcome on the Transfer. It depends only on the
-    AccountRepository port, so all I/O and persistence stay in the application
+    AccountRepository port/interface, so all I/O and persistence stay in the application
     and infrastructure layers.
+    
     """
 
     def __init__(self, repository: AccountRepository):
@@ -31,8 +32,10 @@ class TransferService:
         return transfer
 
     def process_batch(self, transfers: list[Transfer]) -> list[Transfer]:
-        # Pure domain orchestration: process each transfer and return the results.
-        # Persistence (saving balances, writing the report) is the caller's job.
+        """ Process a list of transfers and returns the results.
+        If a transfer fails due to not having sufficient funds, the transfer
+        gets marked as failed and will continue to process the rest of the transfers
+        """
         transfer_results: list[Transfer] = []
         for t in transfers:
             self.process(t)

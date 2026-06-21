@@ -24,7 +24,8 @@ class CsvAccountRepository(AccountRepository):
     ``csv_path``.
     """
 
-    def __init__(self, csv_path: str, output_path: str | Path = "storage/reports/"):
+    def __init__(self, csv_path: str | Path, output_path: str | Path = "storage/reports/"):
+        #todo: Create a .env file so the default output_path can be overriden
         self._path = Path(csv_path)
         self._output_path = Path(output_path)
         self._accounts: dict[str, Account] | None = None
@@ -49,6 +50,8 @@ class CsvAccountRepository(AccountRepository):
     
     @staticmethod
     def _account_from_row(row: list[str]) -> Account:
+        # row is a raw csv.reader list of unknown length; the unpacking enforces
+        # the "exactly two columns" rule at runtime (raises ValueError otherwise).
         raw_number, raw_balance = (cell.strip() for cell in row)
         number = AccountNumber(raw_number)
         balance = Money(Decimal(raw_balance))
@@ -69,6 +72,9 @@ class CsvAccountRepository(AccountRepository):
         return full_path
     
     def get_by_number(self, number: AccountNumber):
+        # load() caches the accounts on first call (the in-memory identity map),
+        # so repeated lookups reuse the same Account instances rather than
+        # re-reading the file — and any in-place debit/credit stays visible here.
         try:
             return self.load()[number.value]
         except KeyError:
