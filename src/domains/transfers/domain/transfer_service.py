@@ -1,5 +1,7 @@
+from domains.transfers.domain.exceptions import TransferError
 from domains.transfers.domain.repositories import AccountRepository
 from domains.transfers.domain.transfer import Transfer
+
 
 class TransferService:
     """Domain service: applies fund transfers between accounts.
@@ -18,15 +20,23 @@ class TransferService:
         try:
             from_account = self.repository.get_by_number(transfer.from_account_number)
             to_account = self.repository.get_by_number(transfer.to_account_number)
-            # NOTE: debit and credit are two separate steps with no rollback. Today this is
-            # safe because the only failure is insufficient funds, which is raised by debit
-            # before any balance changes (credit never runs). If a failure could ever occur
-            # between these two lines (e.g. credit raising), from_account would be left
-            # debited without a matching credit. Add a rollback/guard if that becomes possible.
+            # A transfer must be all-or-nothing across the two Account aggregates.
+            # Each balance change still goes through its own root (debit/credit);
+            # if the credit fails after the debit succeeded, we compensate by
+            # crediting the source back, so neither balance is left half-updated.
+            # NOTE: we compensate on ANY failure (except Exception) but only mark
+            # the transfer FAILED for domain-rule violations (except TransferError).
+            # An unexpected error (a bug, infra failure) is still rolled back, then
+            # propagates so it surfaces loudly rather than masquerading as a normal
+            # failed transfer.
             from_account.debit(transfer.amount)
-            to_account.credit(transfer.amount)
+            try:
+                to_account.credit(transfer.amount)
+            except Exception:
+                from_account.credit(transfer.amount)
+                raise
             transfer.mark_successful()
-        except Exception as error:
+        except TransferError as error:
             transfer.mark_failed(str(error))
 
         return transfer

@@ -98,6 +98,28 @@ def test_failed_transfers_leave_both_balances_unchanged():
         f"failed transfer must not credit to_account: expected 50000.00, got {to_account.balance}"
     )
 
+def test_unexpected_credit_failure_is_rolled_back_and_propagates():
+    # An Account whose credit blows up with a NON-domain error, to simulate a bug
+    # or infra failure occurring AFTER the source has already been debited.
+    class CreditFailsAccount(Account):
+        def credit(self, amount):
+            raise RuntimeError("simulated credit failure")
+
+    from_account = Account(AccountNumber("1111234522221234"), Money(Decimal("10000.00")))
+    to_account = CreditFailsAccount(AccountNumber("3212343433335755"), Money(Decimal("50000.00")))
+    service = TransferService(FakeAccountRepository(from_account, to_account))
+
+    # A non-TransferError surfaces loudly rather than being masked as a failed transfer...
+    with pytest.raises(RuntimeError):
+        service.process(Transfer(from_account.number, to_account.number, AMOUNT))
+
+    # ...but the source debit is still compensated before it propagates.
+    assert from_account.balance == Money(Decimal("10000.00")), (
+        "the source debit must be rolled back when the credit fails: "
+        f"expected 10000.00, got {from_account.balance}"
+    )
+
+
 def test_process_batch_with_no_transfers_returns_no_results():
     service = TransferService(FakeAccountRepository())
 
