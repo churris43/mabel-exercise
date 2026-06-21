@@ -3,9 +3,9 @@ from decimal import Decimal
 from pathlib import Path
 
 from domains.transfers.domain.account_number import AccountNumber
-from domains.transfers.domain.transfer import Transfer
 from domains.transfers.domain.money import Money
 from domains.transfers.domain.repositories import TransferLoader
+from domains.transfers.domain.transfer import Transfer
 
 class CsvTransferLoader(TransferLoader):
     """CSV adapter for the TransferLoader input port.
@@ -18,8 +18,7 @@ class CsvTransferLoader(TransferLoader):
 
     def __init__(self, csv_path: str):
         self._path = Path(csv_path)
-        
-    
+
     def load(self) -> list[Transfer]:
         transfers: list[Transfer] = []
         with self._path.open(newline="") as file:
@@ -33,7 +32,6 @@ class CsvTransferLoader(TransferLoader):
                 transfer = self._transfer_from_row(row)
                 transfers.append(transfer)
         return transfers
-    
 
     @staticmethod
     def _transfer_from_row(row: list[str]) -> Transfer:

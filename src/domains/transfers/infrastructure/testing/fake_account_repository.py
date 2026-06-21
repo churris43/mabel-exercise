@@ -1,7 +1,7 @@
-from domains.transfers.domain.repositories import AccountRepository
 from domains.transfers.domain.account import Account
 from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.exceptions import AccountNumberNotFoundError
+from domains.transfers.domain.repositories import AccountRepository
 
 class FakeAccountRepository(AccountRepository):
     """In-memory AccountRepository for tests.

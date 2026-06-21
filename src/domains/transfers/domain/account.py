@@ -1,5 +1,5 @@
-from domains.transfers.domain.money import Money
 from domains.transfers.domain.account_number import AccountNumber
+from domains.transfers.domain.money import Money
 
 class Account:
     """Entity identified by its AccountNumber, holding a mutable Money balance.

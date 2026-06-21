@@ -1,11 +1,9 @@
-
 from __future__ import annotations
 
 import csv
 import uuid
-from decimal import Decimal
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from domains.transfers.application.reporter import TransferReporter
 from domains.transfers.domain.transfer import Transfer

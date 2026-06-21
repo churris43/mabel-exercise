@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from domains.transfers.domain.exceptions import InvalidAccountNumberError
 
 @dataclass(frozen=True)

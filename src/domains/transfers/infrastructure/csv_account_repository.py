@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import csv
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from datetime import datetime
 
-from domains.transfers.domain.repositories import AccountRepository
-from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.account import Account
-from domains.transfers.domain.money import Money
+from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.exceptions import AccountNumberNotFoundError
+from domains.transfers.domain.money import Money
+from domains.transfers.domain.repositories import AccountRepository
 
 class CsvAccountRepository(AccountRepository):
     """CSV-backed AccountRepository.
@@ -28,14 +28,14 @@ class CsvAccountRepository(AccountRepository):
         #todo: Create a .env file so the default output_path can be overriden
         self._path = Path(csv_path)
         self._output_path = Path(output_path)
+        # Identity map keyed by account number value (account.number.value);
         self._accounts: dict[str, Account] | None = None
-        
-    
+
     def load(self) -> dict[str, Account]:
         if self._accounts is None:
             self._accounts = self._read_file()
         return self._accounts
-    
+
     def _read_file(self) -> dict[str, Account]:
         accounts: dict[str, Account] = {}
         with self._path.open(newline="") as file:
@@ -44,10 +44,9 @@ class CsvAccountRepository(AccountRepository):
                     continue
                 account = self._account_from_row(row)
                 accounts[account.number.value] = account
-                
+
         return accounts
-    
-    
+
     @staticmethod
     def _account_from_row(row: list[str]) -> Account:
         # row is a raw csv.reader list of unknown length; the unpacking enforces
@@ -56,7 +55,7 @@ class CsvAccountRepository(AccountRepository):
         number = AccountNumber(raw_number)
         balance = Money(Decimal(raw_balance))
         return Account(number, balance)
-    
+
     def save(self) -> Path | None:
         if self._accounts is None:
             return None
@@ -70,7 +69,7 @@ class CsvAccountRepository(AccountRepository):
             for account in self._accounts.values():
                 writer.writerow([account.number.value, str(account.balance.amount)])
         return full_path
-    
+
     def get_by_number(self, number: AccountNumber):
         # load() caches the accounts on first call (the in-memory identity map),
         # so repeated lookups reuse the same Account instances rather than

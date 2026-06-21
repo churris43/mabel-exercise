@@ -1,6 +1,7 @@
-from domains.transfers.domain.money import Money
-from domains.transfers.domain.account_number import AccountNumber
 from enum import Enum
+
+from domains.transfers.domain.account_number import AccountNumber
+from domains.transfers.domain.money import Money
 
 
 class TransferStatus(Enum):
@@ -15,6 +16,7 @@ class TransferStatus(Enum):
     PENDING = "pending"
     SUCCESS = "success"
     FAILED = "failed"
+
 
 class Transfer:
     """A request to move an amount of money from one account to another.

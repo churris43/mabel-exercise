@@ -2,11 +2,10 @@
 # the class is fully defined (avoids needing quoted forward references).
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 
 from domains.transfers.domain.exceptions import InsufficientFundsError
-
-from dataclasses import dataclass
 
 CENTS = Decimal("0.01")
 
