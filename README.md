@@ -38,7 +38,7 @@ docker compose down
 ## Assumptions
 
 - Monetary amounts are kept to 2 decimal places (cents), rounding half-up.
-- A batch keeps going when a transfer fails: the failed one is recorded and the rest are still processed.
+- A batch keeps going when a transfer fails: the failed one is recorded and the rest are still processed. For example, in a batch of 3 transfers where the 2nd has insufficient funds, transfers 1 and 3 still complete and the report marks the 2nd as failed.
 - Loading the account balances and transactions files fails fast on a bad format or an unknown account, rather than processing partial data.
 
 ## Nice-to-have improvements
