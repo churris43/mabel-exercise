@@ -5,7 +5,6 @@ from pathlib import Path
 
 from domains.transfers.domain.account import Account
 from domains.transfers.domain.account_number import AccountNumber
-from domains.transfers.domain.transfer import Transfer
 
 class AccountRepository(ABC):
     """Repository + Unit-of-Work over the Account aggregate.
@@ -25,14 +24,3 @@ class AccountRepository(ABC):
         """Flush all mutated accounts. Returns the written file path, or None
         when there was nothing to persist."""
         ...
-
-class TransferLoader(ABC):
-    """Input gateway that loads Transfers from an external source.
-
-    Despite living next to AccountRepository, this is a read-only loader/gateway,
-    not a true Repository over an aggregate — it has no save side and owns no
-    identity map. Kept here for now as the single port module.
-    """
-
-    @abstractmethod
-    def load(self) -> list[Transfer]: ...

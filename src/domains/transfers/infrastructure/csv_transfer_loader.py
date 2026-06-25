@@ -4,7 +4,7 @@ from pathlib import Path
 
 from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.money import Money
-from domains.transfers.domain.repositories import TransferLoader
+from domains.transfers.domain.ports import TransferLoader
 from domains.transfers.domain.transfer import Transfer
 
 class CsvTransferLoader(TransferLoader):
