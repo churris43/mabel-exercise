@@ -3,20 +3,20 @@ from domains.transfers.domain.repositories import AccountRepository
 from domains.transfers.domain.transfer import Transfer
 
 
-class TransferService:
+class TransferExecution:
     """Domain service: applies fund transfers between accounts.
 
     It coordinates two Accounts (debit the source, credit the destination) and
     records the outcome on the Transfer. It depends only on the
     AccountRepository port/interface, so all I/O and persistence stay in the application
     and infrastructure layers.
-    
+
     """
 
     def __init__(self, repository: AccountRepository):
         self.repository = repository
 
-    def process(self, transfer: Transfer):
+    def execute(self, transfer: Transfer):
         try:
             from_account = self.repository.get_by_number(transfer.from_account_number)
             to_account = self.repository.get_by_number(transfer.to_account_number)
@@ -41,13 +41,13 @@ class TransferService:
 
         return transfer
 
-    def process_batch(self, transfers: list[Transfer]) -> list[Transfer]:
+    def execute_batch(self, transfers: list[Transfer]) -> list[Transfer]:
         """ Process a list of transfers and returns the results.
         If a transfer fails due to not having sufficient funds, the transfer
         gets marked as failed and will continue to process the rest of the transfers
         """
         transfer_results: list[Transfer] = []
         for t in transfers:
-            self.process(t)
+            self.execute(t)
             transfer_results.append(t)
         return transfer_results

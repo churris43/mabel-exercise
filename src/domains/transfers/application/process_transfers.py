@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from domains.transfers.domain.transfer import Transfer
-from domains.transfers.domain.transfer_service import TransferService
+from domains.transfers.domain.transfer_execution import TransferExecution
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
 from domains.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
 from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
@@ -25,7 +25,7 @@ class ProcessTransfers:
     write the updated balances and a transfer report.
 
     This is the single entry point wired up by main.py. It owns the I/O
-    (which CSV adapters to use, where output goes); TransferService stays
+    (which CSV adapters to use, where output goes); TransferExecution stays
     focused on the pure domain processing.
     """
 
@@ -41,7 +41,7 @@ class ProcessTransfers:
 
     def run(self) -> TransferResult:
         transfers = self._transfer_repo.load()
-        results = TransferService(self._account_repo).process_batch(transfers)
+        results = TransferExecution(self._account_repo).execute_batch(transfers)
         balances_path = self._account_repo.save()
         # TODO: fire an event for each successful transfer here, so other bounded
         # contexts can react. This is the correct point: AFTER save() has

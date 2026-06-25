@@ -2,7 +2,7 @@ import pytest
 from decimal import Decimal
 
 from domains.transfers.infrastructure.testing.fake_account_repository import FakeAccountRepository
-from domains.transfers.domain.transfer_service import TransferService
+from domains.transfers.domain.transfer_execution import TransferExecution
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
 from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.account import Account
@@ -26,12 +26,12 @@ def to_account():
 
 @pytest.fixture
 def service(from_account, to_account):
-    return TransferService(FakeAccountRepository(from_account, to_account))
+    return TransferExecution(FakeAccountRepository(from_account, to_account))
 
 
 def test_successful_transfers_get_the_right_status(service, from_account, to_account):
     transfer = Transfer(from_account.number, to_account.number, AMOUNT)
-    transfer_processed = service.process(transfer)
+    transfer_processed = service.execute(transfer)
     assert transfer_processed.status == TransferStatus.SUCCESS, (
         f"valid transfer should succeed: expected SUCCESS, got {transfer_processed.status}"
     )
@@ -43,8 +43,8 @@ def test_failed_transfers_get_the_right_status(to_account):
         to_account.number,
         AMOUNT,
     )
-    transfer_service = TransferService(CsvAccountRepository(CSV_PATH))
-    transfer_processed = transfer_service.process(invalid_transfer)
+    service = TransferExecution(CsvAccountRepository(CSV_PATH))
+    transfer_processed = service.execute(invalid_transfer)
     assert transfer_processed.status == TransferStatus.FAILED, (
         f"transfer from an unknown account should fail: expected FAILED, got {transfer_processed.status}"
     )
@@ -53,9 +53,9 @@ def test_failed_transfers_get_the_right_status(to_account):
 def test_failed_transfer_records_the_reason_as_a_string():
     from_account = Account(AccountNumber("1111234522221234"), Money(Decimal("100.00")))
     to_account = Account(AccountNumber("3212343433335755"), Money(Decimal("50000.00")))
-    service = TransferService(FakeAccountRepository(from_account, to_account))
+    service = TransferExecution(FakeAccountRepository(from_account, to_account))
 
-    transfer_processed = service.process(
+    transfer_processed = service.execute(
         Transfer(from_account.number, to_account.number, Money(Decimal("500.00")))
     )
 
@@ -67,7 +67,7 @@ def test_failed_transfer_records_the_reason_as_a_string():
 
 @pytest.fixture
 def processed_accounts(service, from_account, to_account):
-    service.process(Transfer(from_account.number, to_account.number, AMOUNT))
+    service.execute(Transfer(from_account.number, to_account.number, AMOUNT))
     return from_account, to_account
 
 def test_successful_transfer_debits_the_from_account(processed_accounts):
@@ -85,9 +85,9 @@ def test_successful_transfer_credits_the_to_account(processed_accounts):
 def test_failed_transfers_leave_both_balances_unchanged():
     from_account = Account(AccountNumber("1111234522221234"), Money(Decimal("100.00")))
     to_account = Account(AccountNumber("3212343433335755"), Money(Decimal("50000.00")))
-    service = TransferService(FakeAccountRepository(from_account, to_account))
+    service = TransferExecution(FakeAccountRepository(from_account, to_account))
 
-    _transfer = service.process(
+    _transfer = service.execute(
         Transfer(from_account.number, to_account.number, Money(Decimal("500.00")))
     )
 
@@ -107,11 +107,11 @@ def test_unexpected_credit_failure_is_rolled_back_and_propagates():
 
     from_account = Account(AccountNumber("1111234522221234"), Money(Decimal("10000.00")))
     to_account = CreditFailsAccount(AccountNumber("3212343433335755"), Money(Decimal("50000.00")))
-    service = TransferService(FakeAccountRepository(from_account, to_account))
+    service = TransferExecution(FakeAccountRepository(from_account, to_account))
 
     # A non-TransferError surfaces loudly rather than being masked as a failed transfer...
     with pytest.raises(RuntimeError):
-        service.process(Transfer(from_account.number, to_account.number, AMOUNT))
+        service.execute(Transfer(from_account.number, to_account.number, AMOUNT))
 
     # ...but the source debit is still compensated before it propagates.
     assert from_account.balance == Money(Decimal("10000.00")), (
@@ -120,28 +120,28 @@ def test_unexpected_credit_failure_is_rolled_back_and_propagates():
     )
 
 
-def test_process_batch_with_no_transfers_returns_no_results():
-    service = TransferService(FakeAccountRepository())
+def test_execute_batch_with_no_transfers_returns_no_results():
+    service = TransferExecution(FakeAccountRepository())
 
-    results = service.process_batch([])
+    results = service.execute_batch([])
 
     assert results == [], f"empty batch should produce no results, got {results}"
 
-def test_process_batch_continues_after_a_failed_transfer():
+def test_execute_batch_continues_after_a_failed_transfer():
     from_1 = Account(AccountNumber("1111111111111111"), Money(Decimal("1000.00")))
     to_1 = Account(AccountNumber("2222222222222222"), Money(Decimal("0.00")))
     from_2 = Account(AccountNumber("3333333333333333"), Money(Decimal("100.00")))  # too little
     to_2 = Account(AccountNumber("4444444444444444"), Money(Decimal("0.00")))
     from_3 = Account(AccountNumber("5555555555555555"), Money(Decimal("1000.00")))
     to_3 = Account(AccountNumber("6666666666666666"), Money(Decimal("0.00")))
-    service = TransferService(
+    service = TransferExecution(
         FakeAccountRepository(from_1, to_1, from_2, to_2, from_3, to_3)
     )
     t1 = Transfer(from_1.number, to_1.number, Money(Decimal("500.00")))
     t2 = Transfer(from_2.number, to_2.number, Money(Decimal("500.00")))  # insufficient funds
     t3 = Transfer(from_3.number, to_3.number, Money(Decimal("500.00")))
 
-    service.process_batch([t1, t2, t3])
+    service.execute_batch([t1, t2, t3])
 
     assert t1.status == TransferStatus.SUCCESS, (
         f"t1 has sufficient funds and should succeed: expected SUCCESS, got {t1.status}"
@@ -154,13 +154,13 @@ def test_process_batch_continues_after_a_failed_transfer():
     )
 
 
-def test_process_batch_fails_a_transfer_when_an_account_does_not_exist():
+def test_execute_batch_fails_a_transfer_when_an_account_does_not_exist():
     from_account = Account(AccountNumber("1111111111111111"), Money(Decimal("1000.00")))
     missing_account = AccountNumber("9999999999999999")  # never added to the repository
-    service = TransferService(FakeAccountRepository(from_account))
+    service = TransferExecution(FakeAccountRepository(from_account))
     transfer = Transfer(from_account.number, missing_account, Money(Decimal("500.00")))
 
-    service.process_batch([transfer])
+    service.execute_batch([transfer])
 
     assert transfer.status == TransferStatus.FAILED, (
         f"transfer to a non-existent account should fail: expected FAILED, got {transfer.status}"
