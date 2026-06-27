@@ -23,7 +23,6 @@ class Money:
     def __post_init__(self):
         if self.amount < 0:
             raise ValueError("Negative money amounts are not acceptable")
-        # Money is whole-cent only: normalise any extra precision to 2 decimals.
         # Frozen dataclasses block normal assignment, so set the field via
         # object.__setattr__.
         object.__setattr__(self, "amount", self.amount.quantize(CENTS, rounding=ROUND_HALF_UP))
