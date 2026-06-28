@@ -5,18 +5,36 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from domains.transfers.application.process_transfers import ProcessTransfers
+from domains.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
+from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
+from domains.transfers.infrastructure.json_account_reporter import JsonAccountReporter
+from domains.transfers.infrastructure.json_transfer_reporter import JsonTransferReporter
+
 
 if __name__ == "__main__":
-    account_balances_file_path = "specs/mable_account_balances.csv"
-    transfers_file_path = "specs/mable_transactions.csv"
+    source_account_balances_file_path = "specs/mable_account_balances.csv"
+    source_transfers_file_path = "specs/mable_transactions.csv"
+    reports_file_path = "storage/reports/"
     print(f"Processing transfers:")
-    print(f"-->Source balance files {account_balances_file_path}")
-    print(f"-->Source Transfer file: {transfers_file_path}")
-    print("--------------")
+    print(f"-->Source balance files {source_account_balances_file_path}")
+    print(f"-->Source Transfer file: {source_transfers_file_path}")
+    print("--Example #1 Exporting to CSV format --")
     result = ProcessTransfers(
-        account_balances_file_path,
-        transfers_file_path,
+        source_account_balances_file_path,
+        source_transfers_file_path,
+        CsvTransferReporter(reports_file_path),
+        CsvAccountReporter(reports_file_path),
     ).run()
-
+    print(f"Updated balances written to {result.balances_path}")
+    print(f"Transfer report written to {result.report_path}")
+    
+    print("\n\n\n")
+    print("--Example #2 Exporting to json format --")
+    result = ProcessTransfers(
+        source_account_balances_file_path,
+        source_transfers_file_path,
+        JsonTransferReporter(reports_file_path),
+        JsonAccountReporter(reports_file_path),
+    ).run()
     print(f"Updated balances written to {result.balances_path}")
     print(f"Transfer report written to {result.report_path}")

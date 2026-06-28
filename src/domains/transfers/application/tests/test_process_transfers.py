@@ -7,6 +7,8 @@ from domains.transfers.application.process_transfers import ProcessTransfers
 from domains.transfers.domain.money import Money
 from domains.transfers.domain.transfer import TransferStatus
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
+from domains.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
+from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
 
 # End-to-end test of the whole flow against the example files shipped in specs/.
 # Inputs are read read-only; all generated output is redirected into tmp_path.
@@ -25,7 +27,12 @@ EXPECTED_BALANCES = {
 
 @pytest.fixture
 def result(tmp_path):
-    return ProcessTransfers(ACCOUNTS_CSV, TRANSFERS_CSV, output_path=tmp_path).run()
+    return ProcessTransfers(
+        ACCOUNTS_CSV,
+        TRANSFERS_CSV,
+        CsvTransferReporter(tmp_path),
+        CsvAccountReporter(tmp_path),
+    ).run()
 
 
 def test_every_sample_transfer_succeeds(result):
@@ -48,4 +55,26 @@ def test_a_report_row_is_written_for_every_transfer(result):
         rows = list(csv.reader(file))
     assert len(rows) == 5, (
         f"report should have a header plus one row per transfer: expected 5, got {len(rows)}"
+    )
+
+
+def test_balances_path_is_none_when_no_transfers_are_processed(tmp_path):
+    # With no transfers, no account is ever fetched, so nothing is loaded and
+    # there is nothing to write — the orchestrator must skip the account reporter.
+    empty_transfers = tmp_path / "no_transfers.csv"
+    empty_transfers.write_text("")
+    output_dir = tmp_path / "out"
+
+    result = ProcessTransfers(
+        ACCOUNTS_CSV,
+        empty_transfers,
+        CsvTransferReporter(output_dir),
+        CsvAccountReporter(output_dir),
+    ).run()
+
+    assert result.balances_path is None, (
+        f"balances_path should be None when nothing was loaded: got {result.balances_path}"
+    )
+    assert list(output_dir.glob("account_balance_*.csv")) == [], (
+        "no balances file should be written when nothing was processed"
     )
