@@ -1,3 +1,5 @@
+from __future__ import annotations  # required for `X | None` type hints on Python < 3.10
+
 from dataclasses import dataclass
 from pathlib import Path
 
