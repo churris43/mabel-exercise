@@ -30,7 +30,7 @@ class Transfer:
         self.from_account_number = from_account_number
         self.to_account_number = to_account_number
         self.amount = amount
-        self.status = TransferStatus.PENDING
+        self.status: TransferStatus = TransferStatus.PENDING
         self.failure_reason: str | None = None
     
     def mark_successful(self):
