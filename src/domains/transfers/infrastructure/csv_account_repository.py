@@ -58,7 +58,7 @@ class CsvAccountRepository(AccountRepository):
             return []
         return list(self._accounts.values())
 
-    def get_by_number(self, number: AccountNumber):
+    def get_by_number(self, number: AccountNumber) -> Account:
         # load() caches the accounts on first call (the in-memory identity map),
         # so repeated lookups reuse the same Account instances rather than
         # re-reading the file — and any in-place debit/credit stays visible here.
