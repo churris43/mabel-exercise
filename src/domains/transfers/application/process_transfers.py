@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
 
 from domains.transfers.domain.transfer import Transfer
 from domains.transfers.domain.transfer_execution import TransferExecution
+from domains.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
 from domains.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
 from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
@@ -24,8 +23,7 @@ class ProcessTransfers:
     """One day's run: load balances and transfers from CSV, process them, and
     write the updated balances and a transfer report.
 
-    This is the single entry point wired up by main.py. It owns the I/O
-    (which CSV adapters to use, where output goes); TransferExecution stays
+    It owns the I/O (which CSV adapters to use, where output goes); TransferExecution stays
     focused on the pure domain processing.
     """
 
@@ -35,18 +33,20 @@ class ProcessTransfers:
         transfers_csv_path: str | Path,
         output_path: str | Path = "storage/reports/",
     ):
-        self._account_repo = CsvAccountRepository(account_csv_path, output_path)
-        self._transfer_repo = CsvTransferLoader(transfers_csv_path)
-        self._reporter = CsvTransferReporter(output_path)
+        self._account_repo = CsvAccountRepository(account_csv_path)
+        self._transfer_loader = CsvTransferLoader(transfers_csv_path)
+        self._account_reporter = CsvAccountReporter(output_path)
+        self._transfer_reporter = CsvTransferReporter(output_path)
 
     def run(self) -> TransferResult:
-        transfers = self._transfer_repo.load()
-        results = TransferExecution(self._account_repo).execute_batch(transfers)
-        balances_path = self._account_repo.save()
-        # TODO: fire an event for each successful transfer here, so other bounded
-        # contexts can react. This is the correct point: AFTER save() has
-        # committed the balance changes, so we never announce a success that
-        # didn't durably persist. Publish via a domain-defined port injected
-        # into this use case.
-        report_path = self._reporter.write(results)
-        return TransferResult(results, balances_path, report_path)
+        transfers = self._transfer_loader.load()
+        processed_transfers = TransferExecution(self._account_repo).execute_batch(transfers)
+        
+        # Write the (possibly mutated) balances snapshot. No accounts loaded means
+        # nothing was touched, so there is nothing to write (balances_path stays None).
+        updated_accounts = self._account_repo.loaded_accounts()
+        
+        balances_report_path = self._account_reporter.write(updated_accounts) if updated_accounts else None
+
+        transfer_report_path = self._transfer_reporter.write(processed_transfers)
+        return TransferResult(processed_transfers, balances_report_path, transfer_report_path)

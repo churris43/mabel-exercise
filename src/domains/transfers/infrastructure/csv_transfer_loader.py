@@ -13,7 +13,7 @@ class CsvTransferLoader(TransferLoader):
     Reads transfers from a CSV with columns ``from_account_number,
     to_account_number, amount`` (one transfer per row) and returns them as
     Transfer objects. Empty rows are skipped; any other malformed row aborts the
-    load (see the note in ``load``).
+    load.
     """
 
     def __init__(self, csv_path: str):

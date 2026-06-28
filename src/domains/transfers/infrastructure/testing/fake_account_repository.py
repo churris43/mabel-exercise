@@ -21,5 +21,5 @@ class FakeAccountRepository(AccountRepository):
         except KeyError:
             raise AccountNumberNotFoundError() from None
 
-    def save(self):
-        pass
+    def loaded_accounts(self) -> list[Account]:
+        return list(self._accounts.values())

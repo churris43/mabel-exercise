@@ -34,6 +34,9 @@ class Transfer:
         self.failure_reason: str | None = None
     
     def mark_successful(self):
+        # TODO: fire an event for each successful transfer here, so other bounded
+        # contexts can react. This is the correct point: AFTER the balances have
+        # been written, so we never announce a success that didn't durably persist.
         self.status = TransferStatus.SUCCESS
     
     def mark_failed(self, reason: str):

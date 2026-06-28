@@ -25,15 +25,6 @@ def csv_path(tmp_path):
     return path
 
 
-# A separate directory for save() output, kept apart from the input CSV so a
-# test can assert the directory is empty when nothing was written.
-@pytest.fixture
-def output_dir(tmp_path):
-    path = tmp_path / "reports"
-    path.mkdir()
-    return path
-
-
 @pytest.fixture
 def accounts(csv_path):
     return CsvAccountRepository(csv_path).load()
@@ -76,40 +67,33 @@ def test_loading_a_csv_with_a_rubbish_row_fails_fast(tmp_path):
         repository.load()
 
 
-# save() returns the path it wrote, so tests use that rather than guessing the
-# timestamped filename.
-def test_save_writes_all_loaded_accounts(csv_path, output_dir):
-    repository = CsvAccountRepository(csv_path, output_path=output_dir)
-    original = repository.load()
+# loaded_accounts() exposes the identity map for the reporter to write. Each
+# test below isolates one behaviour: full set | empty-before-load | mutations.
+def test_loaded_accounts_returns_every_loaded_account(csv_path):
+    repository = CsvAccountRepository(csv_path)
+    repository.load()
 
-    saved_path = repository.save()
-
-    reloaded = CsvAccountRepository(saved_path).load()
-    assert len(reloaded) == len(original), "Saved file has a different number of accounts than were loaded"
-    for number, account in original.items():
-        assert reloaded[number].balance == account.balance, (
-            f"Balance for {number} was not saved correctly"
-        )
-
-
-def test_save_persists_mutated_balances(csv_path, output_dir):
-    repository = CsvAccountRepository(csv_path, output_path=output_dir)
-    accounts = repository.load()
-    account = accounts["1212343433335665"]
-    account.debit(Money(Decimal("200.00")))  # 1200.00 -> 1000.00
-
-    saved_path = repository.save()
-
-    reloaded = CsvAccountRepository(saved_path).load()
-    assert reloaded["1212343433335665"].balance == Money(Decimal("1000.00")), (
-        "save() did not persist the mutated balance to disk"
+    assert len(repository.loaded_accounts()) == 5, (
+        f"loaded_accounts() should return one account per loaded row: expected 5, "
+        f"got {len(repository.loaded_accounts())}"
     )
 
 
-def test_save_without_loading_writes_nothing(csv_path, output_dir):
-    repository = CsvAccountRepository(csv_path, output_path=output_dir)
+def test_loaded_accounts_is_empty_before_anything_is_loaded(csv_path):
+    repository = CsvAccountRepository(csv_path)
 
-    saved_path = repository.save()
+    assert repository.loaded_accounts() == [], (
+        "loaded_accounts() should be empty when nothing has been loaded, and must "
+        "not trigger a load"
+    )
 
-    assert saved_path is None, "save() should not write a file when nothing has been loaded"
-    assert list(output_dir.iterdir()) == [], "save() created a file despite nothing being loaded"
+
+def test_loaded_accounts_reflects_in_place_mutations(csv_path):
+    repository = CsvAccountRepository(csv_path)
+    repository.get_by_number(AccountNumber("1212343433335665")).debit(Money(Decimal("200.00")))
+
+    mutated = next(a for a in repository.loaded_accounts() if a.number.value == "1212343433335665")
+    assert mutated.balance == Money(Decimal("1000.00")), (
+        "loaded_accounts() should reflect in-place mutations (same identity-mapped "
+        f"instance): expected 1000.00, got {mutated.balance}"
+    )

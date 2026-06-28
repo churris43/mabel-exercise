@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 import csv
-from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -14,20 +11,14 @@ from domains.transfers.domain.repositories import AccountRepository
 class CsvAccountRepository(AccountRepository):
     """CSV-backed AccountRepository.
 
-    Read side is a true repository: it loads accounts from ``csv_path`` and
-    serves them by number via an in-memory identity map.
-
-    Note that ``save()`` does not persist back to ``csv_path`` — it exports a
-    snapshot of the (possibly mutated) balances to a new timestamped file under
-    ``output_path``. The source CSV is treated as immutable input, so saved
-    balances are never read back; a fresh instance always reloads the original
-    ``csv_path``.
+    Loads accounts from ``csv_path`` and serves them by number via an in-memory
+    identity map. The source CSV is treated as immutable input — writing the
+    (possibly mutated) balances out is the AccountReporter's job, fed from
+    ``loaded_accounts()``.
     """
 
-    def __init__(self, csv_path: str | Path, output_path: str | Path = "storage/reports/"):
-        #todo: Create a .env file so the default output_path can be overriden
+    def __init__(self, csv_path: str | Path):
         self._path = Path(csv_path)
-        self._output_path = Path(output_path)
         # Identity map keyed by account number value (account.number.value);
         self._accounts: dict[str, Account] | None = None
 
@@ -56,19 +47,14 @@ class CsvAccountRepository(AccountRepository):
         balance = Money(Decimal(raw_balance))
         return Account(number, balance)
 
-    def save(self) -> Path | None:
+    def loaded_accounts(self) -> list[Account]:
+        # Returns what's currently in the identity map (the accounts served and
+        # possibly mutated). Does NOT trigger a load:
+        # empty when nothing has been loaded, which is how the caller knows there
+        # is nothing to write.
         if self._accounts is None:
-            return None
-        formatted_now = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        filename = "account_balance_" + formatted_now + ".csv"
-        # Create the output dir if it doesn't exist yet (e.g. on a fresh clone).
-        self._output_path.mkdir(parents=True, exist_ok=True)
-        full_path = self._output_path / filename
-        with full_path.open("w", newline="") as file:
-            writer = csv.writer(file)
-            for account in self._accounts.values():
-                writer.writerow([account.number.value, str(account.balance.amount)])
-        return full_path
+            return []
+        return list(self._accounts.values())
 
     def get_by_number(self, number: AccountNumber):
         # load() caches the accounts on first call (the in-memory identity map),

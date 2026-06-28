@@ -49,3 +49,20 @@ def test_a_report_row_is_written_for_every_transfer(result):
     assert len(rows) == 5, (
         f"report should have a header plus one row per transfer: expected 5, got {len(rows)}"
     )
+
+
+def test_balances_path_is_none_when_no_transfers_are_processed(tmp_path):
+    # With no transfers, no account is ever fetched, so nothing is loaded and
+    # there is nothing to write — the orchestrator must skip the account reporter.
+    empty_transfers = tmp_path / "no_transfers.csv"
+    empty_transfers.write_text("")
+    output_dir = tmp_path / "out"
+
+    result = ProcessTransfers(ACCOUNTS_CSV, empty_transfers, output_path=output_dir).run()
+
+    assert result.balances_path is None, (
+        f"balances_path should be None when nothing was loaded: got {result.balances_path}"
+    )
+    assert list(output_dir.glob("account_balance_*.csv")) == [], (
+        "no balances file should be written when nothing was processed"
+    )
