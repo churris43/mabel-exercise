@@ -5,10 +5,9 @@ from pathlib import Path
 
 from domains.transfers.domain.transfer import Transfer
 from domains.transfers.domain.transfer_execution import TransferExecution
-from domains.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
 from domains.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
-from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
+from domains.transfers.application.reporter import AccountReporter, TransferReporter
 
 
 @dataclass
@@ -25,20 +24,22 @@ class ProcessTransfers:
     """One day's run: load balances and transfers from CSV, process them, and
     write the updated balances and a transfer report.
 
-    It owns the I/O (which CSV adapters to use, where output goes); TransferExecution stays
-    focused on the pure domain processing.
+    It orchestrates the I/O via injected ports (the transfer and account reporters,
+    plus the repository and loader); TransferExecution stays focused on the pure
+    domain processing.
     """
 
     def __init__(
         self,
         account_csv_path: str | Path,
         transfers_csv_path: str | Path,
-        output_path: str | Path = "storage/reports/",
+        transfer_reporter: TransferReporter,
+        account_reporter: AccountReporter,
     ):
         self._account_repo = CsvAccountRepository(account_csv_path)
         self._transfer_loader = CsvTransferLoader(transfers_csv_path)
-        self._account_reporter = CsvAccountReporter(output_path)
-        self._transfer_reporter = CsvTransferReporter(output_path)
+        self._account_reporter = account_reporter
+        self._transfer_reporter = transfer_reporter
 
     def run(self) -> TransferResult:
         transfers = self._transfer_loader.load()

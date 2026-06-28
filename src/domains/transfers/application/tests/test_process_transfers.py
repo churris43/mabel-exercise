@@ -7,6 +7,8 @@ from domains.transfers.application.process_transfers import ProcessTransfers
 from domains.transfers.domain.money import Money
 from domains.transfers.domain.transfer import TransferStatus
 from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
+from domains.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
+from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
 
 # End-to-end test of the whole flow against the example files shipped in specs/.
 # Inputs are read read-only; all generated output is redirected into tmp_path.
@@ -25,7 +27,12 @@ EXPECTED_BALANCES = {
 
 @pytest.fixture
 def result(tmp_path):
-    return ProcessTransfers(ACCOUNTS_CSV, TRANSFERS_CSV, output_path=tmp_path).run()
+    return ProcessTransfers(
+        ACCOUNTS_CSV,
+        TRANSFERS_CSV,
+        CsvTransferReporter(tmp_path),
+        CsvAccountReporter(tmp_path),
+    ).run()
 
 
 def test_every_sample_transfer_succeeds(result):
@@ -58,7 +65,12 @@ def test_balances_path_is_none_when_no_transfers_are_processed(tmp_path):
     empty_transfers.write_text("")
     output_dir = tmp_path / "out"
 
-    result = ProcessTransfers(ACCOUNTS_CSV, empty_transfers, output_path=output_dir).run()
+    result = ProcessTransfers(
+        ACCOUNTS_CSV,
+        empty_transfers,
+        CsvTransferReporter(output_dir),
+        CsvAccountReporter(output_dir),
+    ).run()
 
     assert result.balances_path is None, (
         f"balances_path should be None when nothing was loaded: got {result.balances_path}"
