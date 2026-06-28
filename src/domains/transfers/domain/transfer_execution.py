@@ -24,11 +24,6 @@ class TransferExecution:
             # Each balance change still goes through its own root (debit/credit);
             # if the credit fails after the debit succeeded, we compensate by
             # crediting the source back, so neither balance is left half-updated.
-            # NOTE: we compensate on ANY failure (except Exception) but only mark
-            # the transfer FAILED for domain-rule violations (except TransferError).
-            # An unexpected error (a bug, infra failure) is still rolled back, then
-            # propagates so it surfaces loudly rather than masquerading as a normal
-            # failed transfer.
             from_account.debit(transfer.amount)
             try:
                 to_account.credit(transfer.amount)
@@ -46,8 +41,8 @@ class TransferExecution:
         If a transfer fails due to not having sufficient funds, the transfer
         gets marked as failed and will continue to process the rest of the transfers
         """
-        transfer_results: list[Transfer] = []
+        processed_transfers: list[Transfer] = []
         for t in transfers:
             self.execute(t)
-            transfer_results.append(t)
-        return transfer_results
+            processed_transfers.append(t)
+        return processed_transfers
