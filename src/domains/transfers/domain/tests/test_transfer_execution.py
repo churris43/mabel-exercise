@@ -3,14 +3,12 @@ from decimal import Decimal
 
 from domains.transfers.infrastructure.testing.fake_account_repository import FakeAccountRepository
 from domains.transfers.domain.transfer_execution import TransferExecution
-from domains.transfers.infrastructure.csv_account_repository import CsvAccountRepository
 from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.account import Account
 from domains.transfers.domain.transfer import Transfer, TransferStatus
 from domains.transfers.domain.money import Money
 
 AMOUNT = Money(Decimal("500.00"))
-CSV_PATH = "specs/mable_account_balances.csv"
 
 
 # Fresh instances per test so no test can mutate state another test relies on.
@@ -23,28 +21,26 @@ def from_account():
 def to_account():
     return Account(AccountNumber("3212343433335755"), Money(Decimal("50000.00")))
 
-
+# The FakeAccountRepository creates the from_ and to_account and also used for lookups
 @pytest.fixture
-def service(from_account, to_account):
+def transfer_execution(from_account, to_account):
     return TransferExecution(FakeAccountRepository(from_account, to_account))
 
 
-def test_successful_transfers_get_the_right_status(service, from_account, to_account):
+def test_successful_transfers_get_the_right_status(transfer_execution, from_account, to_account):
     transfer = Transfer(from_account.number, to_account.number, AMOUNT)
-    transfer_processed = service.execute(transfer)
+    transfer_processed = transfer_execution.execute(transfer)
     assert transfer_processed.status == TransferStatus.SUCCESS, (
         f"valid transfer should succeed: expected SUCCESS, got {transfer_processed.status}"
     )
 
 
 def test_failed_transfers_get_the_right_status(to_account):
-    invalid_transfer = Transfer(
-        AccountNumber("1234567890123456"),
-        to_account.number,
-        AMOUNT,
-    )
-    service = TransferExecution(CsvAccountRepository(CSV_PATH))
-    transfer_processed = service.execute(invalid_transfer)
+    # The source account is absent from the repository, so its lookup fails.
+    unknown_from_account = AccountNumber("1234567890123456")
+    invalid_transfer = Transfer(unknown_from_account, to_account.number, AMOUNT)
+    transfer_execution = TransferExecution(FakeAccountRepository(to_account))
+    transfer_processed = transfer_execution.execute(invalid_transfer)
     assert transfer_processed.status == TransferStatus.FAILED, (
         f"transfer from an unknown account should fail: expected FAILED, got {transfer_processed.status}"
     )
@@ -66,8 +62,8 @@ def test_failed_transfer_records_the_reason_as_a_string():
 
 
 @pytest.fixture
-def processed_accounts(service, from_account, to_account):
-    service.execute(Transfer(from_account.number, to_account.number, AMOUNT))
+def processed_accounts(transfer_execution, from_account, to_account):
+    transfer_execution.execute(Transfer(from_account.number, to_account.number, AMOUNT))
     return from_account, to_account
 
 def test_successful_transfer_debits_the_from_account(processed_accounts):
