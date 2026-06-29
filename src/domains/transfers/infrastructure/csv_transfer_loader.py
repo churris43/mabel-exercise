@@ -33,6 +33,9 @@ class CsvTransferLoader(TransferLoader):
                 transfers.append(transfer)
         return transfers
 
+    # Stateless helper: maps one CSV row to a Transfer using no instance state
+    # (hence @staticmethod). The leading underscore marks it "private" by
+    # convention — internal to this adapter, not part of its public API.
     @staticmethod
     def _transfer_from_row(row: list[str]) -> Transfer:
         raw_from_account_number, raw_to_account_number, amount = (cell.strip() for cell in row)

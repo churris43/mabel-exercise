@@ -12,7 +12,7 @@ class JsonAccountReporter(AccountReporter):
     """JSON adapter for the AccountReporter output port.
 
     Writes a JSON array with one ``{account_number, balance}`` object per account
-    to a new timestamped ``account_balance*.json`` under the given directory, and
+    to a new timestamped ``account_balance_{datetime}.json`` under the given directory, and
     returns its path.
     """
 
