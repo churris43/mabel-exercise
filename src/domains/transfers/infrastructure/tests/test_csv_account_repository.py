@@ -25,11 +25,9 @@ def csv_path(tmp_path):
     path.write_text(ACCOUNTS_CSV)
     return path
 
-
 @pytest.fixture
 def accounts(csv_path):
     return CsvAccountRepository(csv_path).load()
-
 
 def test_loading_csv_file_creates_one_account_object_per_row(accounts):
     assert len(accounts) == 5, (
@@ -55,18 +53,16 @@ def test_fetching_a_non_existing_account_raises_exception(csv_path):
     with pytest.raises(AccountNumberNotFoundError):
         repository.get_by_number(AccountNumber("1234567890123456"))
 
-
-def test_loading_a_csv_with_a_rubbish_row_fails_fast(tmp_path):
+def test_loading_a_csv_with_an_invalid_account_number_fails_fast(tmp_path):
     bad_csv = tmp_path / "accounts.csv"
     bad_csv.write_text(
         "1212343433335665,1200.00\n"
-        "rubbish,not-a-number\n"
+        "rubbish,100.23\n"
     )
     repository = CsvAccountRepository(bad_csv)
 
     with pytest.raises(InvalidAccountNumberError):
         repository.load()
-
 
 # loaded_accounts() exposes the identity map for the reporter to write. Each
 # test below isolates one behaviour: full set | empty-before-load | mutations.
@@ -79,7 +75,6 @@ def test_loaded_accounts_returns_every_loaded_account(csv_path):
         f"got {len(repository.loaded_accounts())}"
     )
 
-
 def test_loaded_accounts_is_empty_before_anything_is_loaded(csv_path):
     repository = CsvAccountRepository(csv_path)
 
@@ -88,11 +83,11 @@ def test_loaded_accounts_is_empty_before_anything_is_loaded(csv_path):
         "not trigger a load"
     )
 
-
 def test_loaded_accounts_reflects_in_place_mutations(csv_path):
     repository = CsvAccountRepository(csv_path)
     repository.get_by_number(AccountNumber("1212343433335665")).debit(Money(Decimal("200.00")))
 
+    # returns the first account where the number is "1212343433335665"
     mutated = next(a for a in repository.loaded_accounts() if a.number.value == "1212343433335665")
     assert mutated.balance == Money(Decimal("1000.00")), (
         "loaded_accounts() should reflect in-place mutations (same identity-mapped "
