@@ -8,7 +8,7 @@ class TransferExecution:
 
     It coordinates two Accounts (debit the source, credit the destination) and
     records the outcome on the Transfer. It depends only on the
-    AccountRepository port/interface, so all I/O and persistence stay in the application
+    AccountRepository interface, so all I/O and persistence stay in the application
     and infrastructure layers.
 
     """

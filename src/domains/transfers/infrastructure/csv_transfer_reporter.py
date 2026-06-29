@@ -9,7 +9,7 @@ from domains.transfers.application.reporter import TransferReporter
 from domains.transfers.domain.transfer import Transfer
 
 class CsvTransferReporter(TransferReporter):
-    """CSV adapter for the TransferReporter output port.
+    """CSV adapter for the TransferReporter output interface.
 
     Writes one row per transfer (with header) to a new timestamped
     ``transfer_report*.csv`` under the given directory, and returns its path.

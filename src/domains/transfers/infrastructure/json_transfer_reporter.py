@@ -10,7 +10,7 @@ from domains.transfers.domain.transfer import Transfer
 
 
 class JsonTransferReporter(TransferReporter):
-    """JSON adapter for the TransferReporter output port.
+    """JSON adapter for the TransferReporter output interface.
 
     Writes a JSON array with one object per transfer to a new timestamped
     ``transfer_report*.json`` under the given directory, and returns its path.

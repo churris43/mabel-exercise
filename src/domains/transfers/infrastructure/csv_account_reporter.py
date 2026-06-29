@@ -8,7 +8,7 @@ from domains.transfers.application.reporter import AccountReporter
 from domains.transfers.domain.account import Account
 
 class CsvAccountReporter(AccountReporter):
-    """CSV adapter for the AccountReporter output port.
+    """CSV adapter for the AccountReporter output interface.
 
     Writes one ``account_number,balance`` row per account to a new timestamped
     ``account_balance_{datetime}.csv`` under the given directory, and returns its path.

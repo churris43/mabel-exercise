@@ -5,12 +5,12 @@ from domains.transfers.domain.account import Account
 from domains.transfers.domain.transfer import Transfer
 
 class TransferReporter(ABC):
-    """Output port for reporting transfer results.
+    """Output interface for reporting transfer results.
 
-    The application (e.g. ProcessTransfers) drives this port to emit a record of the
+    The application (e.g. ProcessTransfers) drives this interface to emit a record of the
     processed transfers; infrastructure adapters decide the format and
     destination. It lives in the application layer — not in domain/ alongside the
-    repository ports — because reporting is a supporting concern, not a core
+    repository interfaces — because reporting is a supporting concern, not a core
     domain invariant.
     """
 
@@ -21,10 +21,10 @@ class TransferReporter(ABC):
 
 
 class AccountReporter(ABC):
-    """Output port for writing the account balances snapshot.
+    """Output interface for writing the account balances snapshot.
 
     Lives here alongside TransferReporter (not in domain/ with the
-    AccountRepository port) because writing the snapshot is a supporting concern,
+    AccountRepository interface) because writing the snapshot is a supporting concern,
     separate from the repository's read + Unit-of-Work responsibility.
     """
 

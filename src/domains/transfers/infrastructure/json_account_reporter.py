@@ -9,7 +9,7 @@ from domains.transfers.domain.account import Account
 
 
 class JsonAccountReporter(AccountReporter):
-    """JSON adapter for the AccountReporter output port.
+    """JSON adapter for the AccountReporter output interface.
 
     Writes a JSON array with one ``{account_number, balance}`` object per account
     to a new timestamped ``account_balance_{datetime}.json`` under the given directory, and
