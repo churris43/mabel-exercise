@@ -1,14 +1,14 @@
 import sys
 from pathlib import Path
 
-# src/ holds the package root; put it on the path so `domains...` imports resolve.
+# src/ holds the package root; put it on the path so `contexts...` imports resolve.
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
-from domains.transfers.application.process_transfers import ProcessTransfers
-from domains.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
-from domains.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
-from domains.transfers.infrastructure.json_account_reporter import JsonAccountReporter
-from domains.transfers.infrastructure.json_transfer_reporter import JsonTransferReporter
+from contexts.transfers.application.process_transfers import ProcessTransfers
+from contexts.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
+from contexts.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
+from contexts.transfers.infrastructure.json_account_reporter import JsonAccountReporter
+from contexts.transfers.infrastructure.json_transfer_reporter import JsonTransferReporter
 
 
 if __name__ == "__main__":
