@@ -22,7 +22,6 @@ def csv_path(tmp_path):
     path.write_text(TRANSFERS_CSV)
     return path
 
-
 @pytest.fixture
 def transfers(csv_path):
     return CsvTransferLoader(csv_path).load()
@@ -38,7 +37,6 @@ def test_loading_csv_file_creates_object_with_correct_information(transfers):
         f"the second transfer should load with its csv amount: expected 1000.00, got {transfer.amount}"
     )
 
-
 def test_loading_a_csv_with_an_invalid_account_number_fails_fast(tmp_path):
     bad_csv = tmp_path / "transfers.csv"
     bad_csv.write_text(
@@ -49,7 +47,6 @@ def test_loading_a_csv_with_an_invalid_account_number_fails_fast(tmp_path):
 
     with pytest.raises(InvalidAccountNumberError):
         loader.load()
-
 
 def test_loading_a_csv_with_a_rubbish_line_fails_fast(tmp_path):
     bad_csv = tmp_path / "transfers.csv"
@@ -62,7 +59,6 @@ def test_loading_a_csv_with_a_rubbish_line_fails_fast(tmp_path):
     with pytest.raises(ValueError):
         loader.load()
 
-
 def test_loading_a_csv_with_an_extra_column_fails_fast(tmp_path):
     bad_csv = tmp_path / "transfers.csv"
     bad_csv.write_text(
@@ -73,7 +69,6 @@ def test_loading_a_csv_with_an_extra_column_fails_fast(tmp_path):
 
     with pytest.raises(ValueError):
         loader.load()
-
 
 def test_loading_a_csv_skips_empty_lines_in_the_middle(tmp_path):
     csv_with_gap = tmp_path / "transfers.csv"

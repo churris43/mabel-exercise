@@ -14,11 +14,9 @@ def _transfer():
         Money(Decimal("500.00")),
     )
 
-
 def _read_records(path):
     with path.open() as file:
         return json.load(file)
-
 
 # `tmp_path` is a built-in pytest fixture: a unique, empty temporary directory
 # (as a pathlib.Path) created fresh for each test and cleaned up automatically.
@@ -37,7 +35,6 @@ def test_report_record_has_six_fields(tmp_path):
         "Status",
         "FailureReason",
     ], f"the report record fields are incorrect: got {list(record.keys())}"
-
 
 def test_report_record_contains_correct_transfer_information(tmp_path):
     transfer = _transfer()
@@ -58,7 +55,6 @@ def test_report_record_contains_correct_transfer_information(tmp_path):
         f"FailureReason is incorrect: got '{record['FailureReason']}'"
     )
 
-
 def test_failure_reason_is_empty_when_not_set(tmp_path):
     transfer = _transfer()
     transfer.mark_successful()
@@ -70,7 +66,6 @@ def test_failure_reason_is_empty_when_not_set(tmp_path):
         f"FailureReason should be empty when no reason is set: got '{record['FailureReason']}'"
     )
 
-
 def test_empty_batch_writes_an_empty_array(tmp_path):
     path = JsonTransferReporter(tmp_path).write([])
 
@@ -79,8 +74,7 @@ def test_empty_batch_writes_an_empty_array(tmp_path):
         f"an empty batch should produce an empty JSON array: got {records}"
     )
 
-
-def test_failure_reason_with_special_characters_round_trips(tmp_path):
+def test_failure_reason_preserves_commas_and_quotes(tmp_path):
     reason = 'Declined, "retry" later'
     transfer = _transfer()
     transfer.mark_failed(reason)
@@ -92,16 +86,15 @@ def test_failure_reason_with_special_characters_round_trips(tmp_path):
         f"FailureReason with commas/quotes was not preserved: expected '{reason}', got '{record['FailureReason']}'"
     )
 
-
 def test_pending_transfer_is_reported_with_empty_failure_reason(tmp_path):
-    transfer = _transfer()  # never processed -> still PENDING
+    transfer = _transfer()  # a pending transfer (default state)
 
     path = JsonTransferReporter(tmp_path).write([transfer])
 
     record = _read_records(path)[0]
     assert record["Status"] == "pending", (
-        f"Status should be pending for an unprocessed transfer: got {record['Status']}"
+        f"the reporter should serialize a pending transfer's Status as 'pending': got {record['Status']}"
     )
     assert record["FailureReason"] == "", (
-        f"FailureReason should be empty for a pending transfer: got '{record['FailureReason']}'"
+        f"the reporter should leave FailureReason empty for a pending transfer: got '{record['FailureReason']}'"
     )

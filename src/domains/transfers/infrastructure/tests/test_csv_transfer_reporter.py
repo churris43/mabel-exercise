@@ -14,11 +14,9 @@ def _transfer():
         Money(Decimal("500.00")),
     )
 
-
 def _read_rows(path):
     with path.open(newline="") as file:
         return list(csv.reader(file))
-
 
 # `tmp_path` is a built-in pytest fixture: a unique, empty temporary directory
 # (as a pathlib.Path) created fresh for each test and cleaned up automatically.
@@ -40,7 +38,6 @@ def test_report_has_six_headings(tmp_path):
         "FailureReason",
     ], f"the report header columns are incorrect: got {header}"
 
-
 def test_report_row_contains_correct_transfer_information(tmp_path):
     transfer = _transfer()
     transfer.mark_failed("Insufficient Funds")
@@ -60,7 +57,6 @@ def test_report_row_contains_correct_transfer_information(tmp_path):
         f"FailureReason is incorrect: expected 'Insufficient Funds', got '{row[5]}'"
     )
 
-
 def test_failure_reason_is_empty_when_not_set(tmp_path):
     transfer = _transfer()
     transfer.mark_successful()
@@ -72,7 +68,6 @@ def test_failure_reason_is_empty_when_not_set(tmp_path):
         f"FailureReason should be empty when no reason is set: got '{row[5]}'"
     )
 
-
 def test_empty_batch_writes_only_the_header(tmp_path):
     path = CsvTransferReporter(tmp_path).write([])
 
@@ -81,8 +76,7 @@ def test_empty_batch_writes_only_the_header(tmp_path):
         f"an empty batch should produce only a header row: expected 1, got {len(rows)}"
     )
 
-
-def test_failure_reason_with_special_characters_round_trips(tmp_path):
+def test_failure_reason_preserves_commas_and_quotes(tmp_path):
     reason = 'Declined, "retry" later'
     transfer = _transfer()
     transfer.mark_failed(reason)
@@ -94,16 +88,15 @@ def test_failure_reason_with_special_characters_round_trips(tmp_path):
         f"FailureReason with commas/quotes was not preserved: expected '{reason}', got '{row[5]}'"
     )
 
-
 def test_pending_transfer_is_reported_with_empty_failure_reason(tmp_path):
-    transfer = _transfer()  # never processed -> still PENDING
+    transfer = _transfer()  # a pending transfer (default state)
 
     path = CsvTransferReporter(tmp_path).write([transfer])
 
     row = _read_rows(path)[1]
     assert row[4] == "pending", (
-        f"Status should be pending for an unprocessed transfer: expected pending, got {row[4]}"
+        f"the reporter should serialize a pending transfer's Status as 'pending': got {row[4]}"
     )
     assert row[5] == "", (
-        f"FailureReason should be empty for a pending transfer: got '{row[5]}'"
+        f"the reporter should leave FailureReason empty for a pending transfer: got '{row[5]}'"
     )
