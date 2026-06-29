@@ -4,13 +4,10 @@ from pathlib import Path
 
 from domains.transfers.domain.account_number import AccountNumber
 from domains.transfers.domain.money import Money
-from domains.transfers.domain.ports import TransferLoader
 from domains.transfers.domain.transfer import Transfer
 
-class CsvTransferLoader(TransferLoader):
-    """CSV adapter for the TransferLoader input port.
-
-    Reads transfers from a CSV with columns ``from_account_number,
+class CsvTransferLoader():
+    """ Reads transfers from a CSV with columns ``from_account_number,
     to_account_number, amount`` (one transfer per row) and returns them as
     Transfer objects. Empty rows are skipped; any other malformed row aborts the
     load.
