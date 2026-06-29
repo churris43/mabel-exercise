@@ -46,5 +46,8 @@ docker compose down
 - Fire an event when a transfer is processed, so other parts of the system can react to the change.
 - Keep a log of failed transfers so they can be retried later.
 - Include a transferId on the mable_transactions.csv file to better identify source and results
-- Process transfers as a stream/iterator to be able to cope with a much larger transaction set
-- Make the storage backend pluggable (e.g. a database instead of CSV) by injecting the repositories/loader/reporter into `ProcessTransfers` rather than having it construct the CSV adapters itself, moving the wiring into `main.py`. The domain already depends only on the ports, so it would need no changes. As part of this, drop the file-`Path` return from `AccountRepository.save()` (which assumes file storage) and let the concrete file adapter expose where it wrote, so `main.py` can still tell the user the output location.
+- For much larger transfer sets:
+  -- Process transfers as a stream/iterator to avoid memory issues
+  -- Modify the reporter to write a timestamp on the record which also has TZ information
+- Introduce a setter on Transfer.status that only accepts values from the TransferStatus enum.
+-
