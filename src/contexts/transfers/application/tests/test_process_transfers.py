@@ -8,6 +8,7 @@ from contexts.transfers.domain.money import Money
 from contexts.transfers.domain.transfer import TransferStatus
 from contexts.transfers.infrastructure.csv_account_repository import CsvAccountRepository
 from contexts.transfers.infrastructure.csv_account_reporter import CsvAccountReporter
+from contexts.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
 from contexts.transfers.infrastructure.csv_transfer_reporter import CsvTransferReporter
 
 # End-to-end test of the whole flow. The sample inputs are written into tmp_path
@@ -53,8 +54,8 @@ def transfers_csv(tmp_path):
 @pytest.fixture
 def result(tmp_path, accounts_csv, transfers_csv):
     return ProcessTransfers(
-        accounts_csv,
-        transfers_csv,
+        CsvAccountRepository(accounts_csv),
+        CsvTransferLoader(transfers_csv),
         CsvTransferReporter(tmp_path),
         CsvAccountReporter(tmp_path),
     ).run()
@@ -96,8 +97,8 @@ def test_balances_path_is_none_when_no_transfers_are_processed(tmp_path, account
     output_dir = tmp_path / "out"
 
     result = ProcessTransfers(
-        accounts_csv,
-        empty_transfers,
+        CsvAccountRepository(accounts_csv),
+        CsvTransferLoader(empty_transfers),
         CsvTransferReporter(output_dir),
         CsvAccountReporter(output_dir),
     ).run()

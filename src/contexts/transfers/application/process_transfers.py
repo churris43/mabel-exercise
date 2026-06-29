@@ -5,7 +5,7 @@ from pathlib import Path
 
 from contexts.transfers.domain.transfer import Transfer
 from contexts.transfers.domain.transfer_execution import TransferExecution
-from contexts.transfers.infrastructure.csv_account_repository import CsvAccountRepository
+from contexts.transfers.domain.repositories import AccountRepository
 from contexts.transfers.infrastructure.csv_transfer_loader import CsvTransferLoader
 from contexts.transfers.application.reporter import AccountReporter, TransferReporter
 
@@ -31,13 +31,13 @@ class ProcessTransfers:
 
     def __init__(
         self,
-        account_csv_path: str | Path,
-        transfers_csv_path: str | Path,
+        account_repository: AccountRepository,
+        transfer_loader: CsvTransferLoader,
         transfer_reporter: TransferReporter,
         account_reporter: AccountReporter,
     ):
-        self._account_repo = CsvAccountRepository(account_csv_path)
-        self._transfer_loader = CsvTransferLoader(transfers_csv_path)
+        self._account_repo = account_repository
+        self._transfer_loader = transfer_loader
         self._account_reporter = account_reporter
         self._transfer_reporter = transfer_reporter
 
