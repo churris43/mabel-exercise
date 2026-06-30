@@ -16,7 +16,7 @@ class TransferExecution:
     def __init__(self, repository: AccountRepository):
         self.repository = repository
 
-    def execute(self, transfer: Transfer):
+    def execute(self, transfer: Transfer) -> Transfer:
         try:
             from_account = self.repository.get_by_number(transfer.from_account_number)
             to_account = self.repository.get_by_number(transfer.to_account_number)
