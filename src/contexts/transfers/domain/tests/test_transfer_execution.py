@@ -1,3 +1,13 @@
+"""Unit tests for the TransferExecution domain service.
+
+These use FakeAccountRepository — an in-memory test double — rather than the real
+CsvAccountRepository so the tests stay focused on the domain logic (debit/credit,
+compensation, status marking) without touching the filesystem or CSV parsing. The
+fake honours the same contract as the real adapter (e.g. it raises
+AccountNumberNotFoundError for a missing account), so the service behaves
+identically to production. The CSV adapter is tested separately.
+"""
+
 import pytest
 from decimal import Decimal
 
