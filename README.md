@@ -43,6 +43,7 @@ docker compose down
 
 ## Nice-to-have improvements
 
+- Build a solution that aligns more with a real case scenario using a database (accounts, transfer, transfer_results, etc ...)
 - Fire an event when a transfer is processed, so other parts of the system can react to the change.
 - Keep a log of failed transfers so they can be retried later.
 - Include a transferId on the mable_transactions.csv file to better identify source and results
@@ -50,4 +51,3 @@ docker compose down
   -- Process transfers as a stream/iterator to avoid memory issues
   -- Modify the reporter to write a timestamp on the record which also has TZ information
 - Introduce a setter on Transfer.status that only accepts values from the TransferStatus enum.
--

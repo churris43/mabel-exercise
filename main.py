@@ -17,26 +17,26 @@ if __name__ == "__main__":
     source_account_balances_file_path = "specs/mable_account_balances.csv"
     source_transfers_file_path = "specs/mable_transactions.csv"
     reports_file_path = "storage/reports/"
-    print(f"Processing transfers:")
-    print(f"-->Source balance files {source_account_balances_file_path}")
-    print(f"-->Source Transfer file: {source_transfers_file_path}")
-    print("--Example #1 Exporting to CSV format --")
+    print("\n\n")
+
+    print("--Example #1 Processing and exporting to CSV format --")
     result = ProcessTransfers(
         CsvAccountRepository(source_account_balances_file_path),
         CsvTransferLoader(source_transfers_file_path),
-        CsvTransferReporter(reports_file_path),
+        CsvTransferReporter(reports_file_path), #strategy pattern
         CsvAccountReporter(reports_file_path),
     ).run()
     print(f"Updated balances written to {result.balances_path}")
     print(f"Transfer report written to {result.report_path}")
     
-    print("\n\n\n")
-    print("--Example #2 Exporting to json format --")
+    print("\n\n")
+    print("--Example #2 Processing and exporting to json format --")
     result = ProcessTransfers(
         CsvAccountRepository(source_account_balances_file_path),
         CsvTransferLoader(source_transfers_file_path),
-        JsonTransferReporter(reports_file_path),
+        JsonTransferReporter(reports_file_path),  #strategy pattern
         JsonAccountReporter(reports_file_path),
     ).run()
     print(f"Updated balances written to {result.balances_path}")
     print(f"Transfer report written to {result.report_path}")
+print("\n")
